@@ -11,6 +11,7 @@ export const TOPICS = {
   ARM_MODE: '/arm/mode',
   JOY: '/joy',
   EMERGENCY_STOP: '/emergency_stop',
+  CMD_VEL: '/diff_drive_controller/cmd_vel',
 };
 
 // ROS Message Types
@@ -19,6 +20,7 @@ export const MSG_TYPES = {
   STRING: 'std_msgs/msg/String',
   BATTERY_STATE: 'sensor_msgs/msg/BatteryState',
   JOY: 'sensor_msgs/msg/Joy',
+  TWIST_STAMPED: 'geometry_msgs/msg/TwistStamped',
   // Custom message types (to be defined in rover packages)
   NETWORK_STATUS: 'std_msgs/msg/String', // JSON-encoded for flexibility
   NODE_LIST: 'std_msgs/msg/String',      // JSON-encoded list of nodes

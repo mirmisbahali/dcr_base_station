@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Topic } from 'roslib';
 import { useROSConnection } from './useROSConnection';
+import { TOPICS } from '@/lib/utils/constants';
 
 const DEADZONE = 0.1;
 const LINEAR_SCALE = 1.0;   // m/s
@@ -40,8 +41,8 @@ export function useGamepad() {
     if (isConnected && ros) {
       cmdVelTopicRef.current = new Topic({
         ros,
-        name: '/cmd_vel',
-        messageType: 'geometry_msgs/Twist',
+        name: TOPICS.CMD_VEL,
+        messageType: 'geometry_msgs/TwistStamped',
       });
     } else {
       cmdVelTopicRef.current = null;
@@ -59,9 +60,10 @@ export function useGamepad() {
       setGamepadName(null);
       // Publish a zero-velocity stop when gamepad disconnects
       if (cmdVelTopicRef.current) {
-        cmdVelTopicRef.current.publish(
-          { linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } }
-        );
+        cmdVelTopicRef.current.publish({
+          header: { stamp: { secs: 0, nsecs: 0 }, frame_id: '' },
+          twist: { linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } },
+        });
       }
     };
 
@@ -110,9 +112,16 @@ export function useGamepad() {
       const linear  = applyDeadzone(rawLinear,  DEADZONE) * LINEAR_SCALE;
       const angular = applyDeadzone(rawAngular, DEADZONE) * ANGULAR_SCALE;
 
+      const nowMs = Date.now();
+      const secs = Math.floor(nowMs / 1000);
+      const nsecs = (nowMs % 1000) * 1e6;
+
       cmdVelTopicRef.current.publish({
-        linear:  { x: linear,  y: 0, z: 0 },
-        angular: { x: 0, y: 0, z: angular },
+        header: { stamp: { secs, nsecs }, frame_id: '' },
+        twist: {
+          linear:  { x: linear,  y: 0, z: 0 },
+          angular: { x: 0, y: 0, z: angular },
+        },
       });
     };
 
