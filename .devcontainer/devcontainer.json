@@ -1,24 +1,18 @@
 {
-  "name": "Base Station Computer",
-  "forwardPorts": [
-    3000,
-    9090,
-    8080
-  ],
-  "dockerFile": "Dockerfile",
+  "name": "Base Station",
+  "build": {
+    "dockerfile": "Dockerfile",
+    // "context": "../.."
+  },
   "runArgs": [
     "--privileged",
-    "--network=host",
-    "--cap-add=NET_ADMIN"
+    "--network=host"
   ],
-  "containerEnv": {
-    "DISPLAY": "host.docker.internal:0.0",
-    "LIBGL_ALWAYS_SOFTWARE": "1"
-  },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
-  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder}/base_station_ws,target=/${localWorkspaceFolderBasename}/base_station_ws,type=bind",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}/base_station_ws",
   // "mounts" causes problems on Windows hosts
-  // "mounts": [
-  //   "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
-  // ]
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
+  ],
+  "postCreateCommand": "echo 'Container ready.'"
 }

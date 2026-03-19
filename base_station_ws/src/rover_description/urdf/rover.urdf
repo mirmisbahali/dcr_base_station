@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<robot name="rover">
+
+  <material name="blue">
+    <color rgba="0.0 0.0 1.0 1.0"/>
+  </material>
+
+  <!-- Chassis 0.7m long (X), 0.45m wide (Y), 0.2m tall (Z) -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.7 0.45 0.2"/></geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+  </link>
+
+  <!-- Wheel links cylinder radius=0.1m, length=0.1m -->
+  <!-- Visual rotated 90deg around X so cylinder disk faces forward (XZ plane) -->
+
+  <link name="wheel_front_left">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="wheel_mid_left">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="wheel_rear_left">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="wheel_front_right">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="wheel_mid_right">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="wheel_rear_right">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.1"/></geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <!-- Wheel joints continuous (spin around Y axis) -->
+  <!-- Y-offset chassis_half_width(0.225) + wheel_half_length(0.05) = 0.275 -->
+  <!-- Z-offset -chassis_half_height = -0.1 (axle flush with chassis bottom) -->
+
+  <joint name="joint_wheel_front_left" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_front_left"/>
+    <origin xyz="0.25 0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_wheel_mid_left" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_mid_left"/>
+    <origin xyz="0.0 0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_wheel_rear_left" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_rear_left"/>
+    <origin xyz="-0.25 0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_wheel_front_right" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_front_right"/>
+    <origin xyz="0.25 -0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_wheel_mid_right" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_mid_right"/>
+    <origin xyz="0.0 -0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_wheel_rear_right" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_rear_right"/>
+    <origin xyz="-0.25 -0.275 -0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+</robot>

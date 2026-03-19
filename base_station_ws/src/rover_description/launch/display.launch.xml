@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Load URDF into robot_description parameter -->
+  <let name="urdf_file"
+       value="$(find-pkg-share rover_description)/urdf/rover.urdf"/>
+
+  <node pkg="robot_state_publisher" exec="robot_state_publisher" name="robot_state_publisher">
+    <param name="robot_description"
+           value="$(command 'xacro $(find-pkg-share rover_description)/urdf/rover.urdf')"/>
+  </node>
+
+  <!-- GUI sliders for joint positions (wheels are continuous joints) -->
+  <node pkg="joint_state_publisher_gui" exec="joint_state_publisher_gui"
+        name="joint_state_publisher_gui"/>
+
+  <!-- RViz with pre-configured display -->
+  <node pkg="rviz2" exec="rviz2" name="rviz2"
+        args="-d $(find-pkg-share rover_description)/rviz/urdf.rviz"/>
+</launch>

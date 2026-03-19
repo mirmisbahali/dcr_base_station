@@ -1,3 +1,4 @@
+# FROM dustynv/ros:jazzy-desktop-r36.4.0-cu128-24.04
 FROM osrf/ros:jazzy-desktop-full
 
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
@@ -9,6 +10,10 @@ RUN if ! id -u $USER_UID >/dev/null 2>&1; then \
     groupadd --gid $USER_GID $USERNAME && \
     useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME; \
     fi
+# Refresh expired ROS2 GPG key (key F42ED6FBAB17C654 expires in dustynv base images)
+RUN sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc \
+    | sudo gpg --dearmor \
+    | sudo tee /usr/share/keyrings/ros-archive-keyring.gpg > /dev/null
 # Add sudo support for the non-root user
 RUN apt-get update && \
     apt-get install -y sudo && \
@@ -22,65 +27,44 @@ USER $USERNAME
 RUN sudo usermod --append --groups video $USERNAME
 
 # Update all packages
-RUN sudo apt update && sudo apt upgrade -y
+RUN sudo apt-get update && sudo apt-get upgrade -y
 
 # Install Git
-RUN sudo apt install -y git
+RUN sudo apt-get install -y git
 
 # Rosdep update
 RUN rosdep update
 
 # Source the ROS setup file
+# RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
 ################################
 ## ADD ANY CUSTOM SETUP BELOW ##
 ################################
+# Install additional ROS packages from source using dusty-nv's build helper.
+# apt-get install ros-jazzy-* does not work in dustynv base images because
 
-# Installing Nodejs
-RUN sudo curl -fsSL https://deb.nodesource.com/setup_24.x | sudo bash - && \
-    sudo apt-get install -y nodejs
-
-EXPOSE 3000
-
-# Block A — ROS 2 arm/MoveIt/ros2_control packages
 RUN sudo apt-get update && sudo apt-get install -y \
-    ros-jazzy-moveit \
     ros-jazzy-ros2-control \
     ros-jazzy-ros2-controllers \
-    ros-jazzy-robot-state-publisher \
     ros-jazzy-joint-state-publisher \
-    ros-jazzy-joint-state-publisher-gui \
+    ros-jazzy-robot-state-publisher \
     ros-jazzy-xacro \
-    ros-jazzy-web-video-server \
     ros-jazzy-rosbridge-server \
-    && sudo rm -rf /var/lib/apt/lists/*
-
-# Block B — colcon build tools
-RUN sudo apt-get update && sudo apt-get install -y \
-    python3-colcon-common-extensions \
-    python3-vcstool \
+    ros-jazzy-image-transport \
+    ros-jazzy-urdf-tutorial \
+    libmodbus-dev \
     python3-pip \
-    && sudo rm -rf /var/lib/apt/lists/*
+    python3-numpy \
+    python3-yaml \
+    wireless-tools \
+    net-tools \
+    iputils-ping \
+    psmisc \
+    v4l-utils
 
-# Block C — X11/OpenGL for RViz2 / MoveIt GUI on Windows
-RUN sudo apt-get update && sudo apt-get install -y \
-    libglx-mesa0 \
-    libgl1-mesa-dri \
-    x11-apps \
-    mesa-utils \
-    libxcb-xinerama0 \
-    libxcb-icccm4 \
-    libxcb-image0 \
-    libxcb-keysyms1 \
-    libxcb-randr0 \
-    libxcb-render-util0 \
-    libxcb-xkb1 \
-    libxkbcommon-x11-0 \
-    && sudo rm -rf /var/lib/apt/lists/*
 
-# Block D — CAN bus utilities (candump/cansend for protocol debugging, ip link for bus setup)
-RUN sudo apt-get update && sudo apt-get install -y \
-    can-utils \
-    iproute2 \
-    && sudo rm -rf /var/lib/apt/lists/*
+# RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
+
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
