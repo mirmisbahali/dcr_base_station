@@ -3,17 +3,17 @@
 import React from 'react';
 import { SportsEsports as JoystickIcon } from '@mui/icons-material';
 import StatusIndicator from './StatusIndicator';
-import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { useGamepad } from '@/hooks/useGamepad';
 
 const JoystickStatus = () => {
-  const { joystick } = useSystemStatus();
+  const { connected } = useGamepad();
 
   return (
     <StatusIndicator
       label="Joystick"
-      active={joystick.connected}
-      stale={!joystick.lastUpdate}
-      value={joystick.connected ? 'Connected' : 'No Signal'}
+      active={connected}
+      stale={false}
+      value={connected ? 'Connected' : 'No Signal'}
       icon={<JoystickIcon fontSize="small" />}
     />
   );

@@ -4,7 +4,6 @@ import "./globals.css";
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ROSProvider } from '@/context/ROSContext';
-import { SystemStatusProvider } from '@/context/SystemStatusContext';
 import theme from '@/styles/theme';
 import { Rajdhani, Roboto_Mono } from 'next/font/google';
 
@@ -33,9 +32,7 @@ export default function RootLayout({ children }) {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <ROSProvider>
-            <SystemStatusProvider>
-              {children}
-            </SystemStatusProvider>
+            {children}
           </ROSProvider>
         </ThemeProvider>
       </body>

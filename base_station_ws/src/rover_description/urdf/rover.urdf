@@ -113,35 +113,50 @@
 
   <ros2_control name="rover_hardware" type="system">
     <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
+      <plugin>rover_motor_driver/BLD305SHardware</plugin>
+      <param name="serial_port">/dev/ttyUSB0</param>
+      <param name="baud_rate">9600</param>
+      <param name="max_rpm">7000</param>
     </hardware>
 
     <joint name="joint_wheel_front_left">
+      <param name="modbus_address">1</param>
+      <param name="invert">false</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint_wheel_mid_left">
+      <param name="modbus_address">2</param>
+      <param name="invert">false</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint_wheel_rear_left">
+      <param name="modbus_address">3</param>
+      <param name="invert">false</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint_wheel_front_right">
+      <param name="modbus_address">4</param>
+      <param name="invert">true</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint_wheel_mid_right">
+      <param name="modbus_address">5</param>
+      <param name="invert">true</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
     <joint name="joint_wheel_rear_right">
+      <param name="modbus_address">6</param>
+      <param name="invert">true</param>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>

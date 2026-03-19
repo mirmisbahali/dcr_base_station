@@ -3,15 +3,13 @@
 import { Box, Typography } from '@mui/material';
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
-import EmergencyStop from '@/components/control/EmergencyStop';
-import ArmModeIndicator from '@/components/arm/ArmModeIndicator';
-import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
+import JoystickStatus from '@/components/status/JoystickStatus';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
 
 function ArmControlPanel() {
   const { isConnected } = useROSConnection();
-  const { connected, gamepadName } = useArmGamepad();
+  useArmGamepad();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -19,27 +17,7 @@ function ArmControlPanel() {
 
       {isConnected && (
         <>
-          <EmergencyStop />
-          <ArmModeIndicator />
-          <MotorStatusPanel />
-
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1,
-              background: connected ? '#1b3a1b' : '#2a2a2a',
-              border: '1px solid',
-              borderColor: connected ? 'success.dark' : 'divider',
-              fontSize: 12,
-              fontFamily: 'monospace',
-              color: connected ? 'success.light' : 'text.disabled',
-              userSelect: 'none',
-            }}
-          >
-            {connected
-              ? `Gamepad: ${gamepadName ?? 'connected'} — publishing /joy`
-              : 'No gamepad detected — connect a controller to control the arm'}
-          </Box>
+          <JoystickStatus />
         </>
       )}
     </Box>

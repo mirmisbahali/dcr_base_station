@@ -1,31 +1,14 @@
 // ROS Topic Names
 export const TOPICS = {
-  CAN_STATUS: '/system/can_status',
-  RS485_STATUS: '/system/rs485_status',
-  POWER: '/system/power',
-  JOYSTICK: '/joy',
-  NETWORK: '/system/network',
-  NODES: '/system/nodes',
-  MOTOR_STAT1: '/motor_stat_1',
-  MOTOR_STAT2: '/motor_stat_2',
-  ARM_MODE: '/arm/mode',
   JOY: '/joy',
-  EMERGENCY_STOP: '/emergency_stop',
   CMD_VEL: '/diff_drive_controller/cmd_vel',
 };
 
 // ROS Message Types
 export const MSG_TYPES = {
-  BOOL: 'std_msgs/msg/Bool',
   STRING: 'std_msgs/msg/String',
-  BATTERY_STATE: 'sensor_msgs/msg/BatteryState',
   JOY: 'sensor_msgs/msg/Joy',
   TWIST_STAMPED: 'geometry_msgs/msg/TwistStamped',
-  // Custom message types (to be defined in rover packages)
-  NETWORK_STATUS: 'std_msgs/msg/String', // JSON-encoded for flexibility
-  NODE_LIST: 'std_msgs/msg/String',      // JSON-encoded list of nodes
-  MOTOR_STAT1: 'arm_interfaces/msg/MotorStat1',
-  MOTOR_STAT2: 'arm_interfaces/msg/MotorStat2',
 };
 
 // ROS Service Types
@@ -49,11 +32,3 @@ export const STREAM_DEFAULTS = {
   width: 640,
   height: 480,
 };
-
-// Default configurable nodes that can be launched from the GUI
-export const DEFAULT_NODES = [
-  { id: 'camera_node', name: 'Camera Node', package: 'rover_camera', executable: 'camera_node' },
-  { id: 'can_bridge', name: 'CAN Bridge', package: 'rover_can', executable: 'can_bridge_node' },
-  { id: 'sensor_hub', name: 'Sensor Hub', package: 'rover_monitor', executable: 'system_monitor_node' },
-  { id: 'system_monitor', name: 'System Monitor', package: 'rover_monitor', executable: 'system_monitor_node' },
-];

@@ -1,0 +1,139 @@
+#include "rover_motor_driver/bld305s_hardware.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <stdexcept>
+
+namespace rover_motor_driver
+{
+
+// BLD-305S Modbus register addresses
+static constexpr uint16_t REG_SPEED        = 0x0056;  // write: 0-4000
+static constexpr uint16_t REG_CONTROL      = 0x0066;  // write: 0=stop,1=fwd,2=rev,3=brake
+static constexpr uint16_t REG_ACTUAL_SPEED = 0x005F;  // read: actual speed
+
+hardware_interface::CallbackReturn BLD305SHardware::on_init(
+  const hardware_interface::HardwareInfo & info)
+{
+  if (hardware_interface::SystemInterface::on_init(info) !=
+      hardware_interface::CallbackReturn::SUCCESS) {
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  // Read global hardware parameters
+  serial_port_ = info_.hardware_parameters.at("serial_port");
+  baud_rate_   = std::stoi(info_.hardware_parameters.at("baud_rate"));
+  max_rpm_     = std::stod(info_.hardware_parameters.at("max_rpm"));
+
+  // Read per-joint parameters
+  for (const auto & joint : info_.joints) {
+    MotorConfig m;
+    m.address = std::stoi(joint.parameters.at("modbus_address"));
+    m.invert  = joint.parameters.count("invert") &&
+                joint.parameters.at("invert") == "true";
+    motors_.push_back(m);
+  }
+
+  hw_commands_.resize(info_.joints.size(), 0.0);
+  hw_velocities_.resize(info_.joints.size(), 0.0);
+  hw_positions_.resize(info_.joints.size(), 0.0);
+
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn BLD305SHardware::on_configure(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  ctx_ = modbus_new_rtu(serial_port_.c_str(), baud_rate_, 'N', 8, 1);
+  if (!ctx_) {
+    RCLCPP_ERROR(rclcpp::get_logger("BLD305S"),
+      "Failed to create Modbus context for %s", serial_port_.c_str());
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  modbus_set_response_timeout(ctx_, 0, 200000);  // 200 ms
+
+  if (modbus_connect(ctx_) == -1) {
+    RCLCPP_ERROR(rclcpp::get_logger("BLD305S"),
+      "Cannot connect to RS485 port %s: %s",
+      serial_port_.c_str(), modbus_strerror(errno));
+    modbus_free(ctx_);
+    ctx_ = nullptr;
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  RCLCPP_INFO(rclcpp::get_logger("BLD305S"),
+    "Connected to RS485 on %s at %d baud", serial_port_.c_str(), baud_rate_);
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn BLD305SHardware::on_activate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  // Ensure all motors are stopped on activation
+  for (const auto & m : motors_) {
+    modbus_set_slave(ctx_, m.address);
+    modbus_write_register(ctx_, REG_CONTROL, 0);
+  }
+  RCLCPP_INFO(rclcpp::get_logger("BLD305S"), "All motors stopped and ready.");
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn BLD305SHardware::on_deactivate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  for (const auto & m : motors_) {
+    modbus_set_slave(ctx_, m.address);
+    modbus_write_register(ctx_, REG_CONTROL, 0);  // stop
+  }
+  RCLCPP_INFO(rclcpp::get_logger("BLD305S"), "All motors stopped on deactivate.");
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::return_type BLD305SHardware::read(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+{
+  for (size_t i = 0; i < motors_.size(); ++i) {
+    uint16_t raw = 0;
+    modbus_set_slave(ctx_, motors_[i].address);
+    if (modbus_read_registers(ctx_, REG_ACTUAL_SPEED, 1, &raw) == 1) {
+      // raw is 0-4000 proportional to max_rpm_
+      double rpm = static_cast<double>(raw) / 4000.0 * max_rpm_;
+      double rads = rpm * 2.0 * M_PI / 60.0;
+      // Preserve sign from command
+      hw_velocities_[i] = (hw_commands_[i] >= 0.0) ? rads : -rads;
+    }
+    hw_positions_[i] += hw_velocities_[i] * period.seconds();
+  }
+  return hardware_interface::return_type::OK;
+}
+
+hardware_interface::return_type BLD305SHardware::write(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+{
+  for (size_t i = 0; i < motors_.size(); ++i) {
+    double vel = hw_commands_[i];
+    if (motors_[i].invert) { vel = -vel; }
+
+    double rpm = std::abs(vel) * 60.0 / (2.0 * M_PI);
+    auto speed_val = static_cast<uint16_t>(
+      std::clamp(rpm / max_rpm_ * 4000.0, 0.0, 4000.0));
+
+    uint16_t ctrl_val;
+    if (vel > 0.05)       ctrl_val = 1;  // forward
+    else if (vel < -0.05) ctrl_val = 2;  // reverse
+    else                  ctrl_val = 0;  // stop
+
+    modbus_set_slave(ctx_, motors_[i].address);
+    modbus_write_register(ctx_, REG_SPEED,   speed_val);
+    modbus_write_register(ctx_, REG_CONTROL, ctrl_val);
+  }
+  return hardware_interface::return_type::OK;
+}
+
+}  // namespace rover_motor_driver
+
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(
+  rover_motor_driver::BLD305SHardware,
+  hardware_interface::SystemInterface)
