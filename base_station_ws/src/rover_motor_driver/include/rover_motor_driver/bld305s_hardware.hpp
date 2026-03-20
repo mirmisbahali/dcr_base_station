@@ -49,6 +49,7 @@ private:
   std::vector<double> hw_commands_;     // velocity commands (rad/s)
   std::vector<double> hw_velocities_;   // state: actual velocity (rad/s)
   std::vector<double> hw_positions_;    // state: integrated position (rad)
+  std::vector<uint16_t> prev_ctrl_;     // cached direction per motor
 };
 
 }  // namespace rover_motor_driver

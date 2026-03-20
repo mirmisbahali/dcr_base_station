@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50  # Hz
+    update_rate: 5  # Hz — limited by RS485 Modbus RTU at 9600 baud
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -24,7 +24,7 @@ diff_drive_controller:
 
     enable_odom_tf: true
 
-    publish_rate: 50.0
+    publish_rate: 5.0
 
     linear.x.max_velocity: 1.0
     linear.x.min_velocity: -1.0

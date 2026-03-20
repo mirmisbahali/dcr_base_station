@@ -37,6 +37,7 @@ hardware_interface::CallbackReturn BLD305SHardware::on_init(
   hw_commands_.resize(info_.joints.size(), 0.0);
   hw_velocities_.resize(info_.joints.size(), 0.0);
   hw_positions_.resize(info_.joints.size(), 0.0);
+  prev_ctrl_.resize(info_.joints.size(), 0);
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -51,7 +52,7 @@ hardware_interface::CallbackReturn BLD305SHardware::on_configure(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  modbus_set_response_timeout(ctx_, 0, 200000);  // 200 ms
+  modbus_set_response_timeout(ctx_, 0, 30000);   // 30 ms
 
   if (modbus_connect(ctx_) == -1) {
     RCLCPP_ERROR(rclcpp::get_logger("BLD305S"),
@@ -93,16 +94,9 @@ hardware_interface::CallbackReturn BLD305SHardware::on_deactivate(
 hardware_interface::return_type BLD305SHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
+  // open_loop: true — use commanded velocity as state feedback, no Modbus reads
   for (size_t i = 0; i < motors_.size(); ++i) {
-    uint16_t raw = 0;
-    modbus_set_slave(ctx_, motors_[i].address);
-    if (modbus_read_registers(ctx_, REG_ACTUAL_SPEED, 1, &raw) == 1) {
-      // raw is 0-4000 proportional to max_rpm_
-      double rpm = static_cast<double>(raw) / 4000.0 * max_rpm_;
-      double rads = rpm * 2.0 * M_PI / 60.0;
-      // Preserve sign from command
-      hw_velocities_[i] = (hw_commands_[i] >= 0.0) ? rads : -rads;
-    }
+    hw_velocities_[i] = hw_commands_[i];
     hw_positions_[i] += hw_velocities_[i] * period.seconds();
   }
   return hardware_interface::return_type::OK;
@@ -125,8 +119,11 @@ hardware_interface::return_type BLD305SHardware::write(
     else                  ctrl_val = 0;  // stop
 
     modbus_set_slave(ctx_, motors_[i].address);
-    modbus_write_register(ctx_, REG_SPEED,   speed_val);
-    modbus_write_register(ctx_, REG_CONTROL, ctrl_val);
+    modbus_write_register(ctx_, REG_SPEED, speed_val);          // always write speed
+    if (ctrl_val != prev_ctrl_[i]) {                            // only write direction on change
+      modbus_write_register(ctx_, REG_CONTROL, ctrl_val);
+      prev_ctrl_[i] = ctrl_val;
+    }
   }
   return hardware_interface::return_type::OK;
 }
