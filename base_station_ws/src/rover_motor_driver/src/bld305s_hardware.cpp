@@ -37,7 +37,12 @@ hardware_interface::CallbackReturn BLD305SHardware::on_init(
   hw_commands_.resize(info_.joints.size(), 0.0);
   hw_velocities_.resize(info_.joints.size(), 0.0);
   hw_positions_.resize(info_.joints.size(), 0.0);
-  prev_ctrl_.resize(info_.joints.size(), 0);
+
+  // Initialize per-address caches with sentinel values (force first write)
+  for (const auto & m : motors_) {
+    prev_ctrl_map_[m.address]  = 0xFF;
+    prev_speed_map_[m.address] = 0xFFFF;
+  }
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -71,14 +76,16 @@ hardware_interface::CallbackReturn BLD305SHardware::on_configure(
 hardware_interface::CallbackReturn BLD305SHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  for (const auto & m : motors_) {
-    modbus_set_slave(ctx_, m.address);
+  // Write init registers to each unique address once
+  for (auto & [addr, val] : prev_ctrl_map_) {
+    modbus_set_slave(ctx_, addr);
     modbus_write_register(ctx_, 0x0136, 0x0001);  // internal control mode
     modbus_write_register(ctx_, 0x0116, 0x0002);  // pole pairs = 2
     modbus_write_register(ctx_, REG_CONTROL, 0);  // stop
+    // Reset caches so first write() sends direction and speed to every address
+    val = 0xFF;
+    prev_speed_map_[addr] = 0xFFFF;
   }
-  // reset direction cache so first write() sends direction to every motor
-  std::fill(prev_ctrl_.begin(), prev_ctrl_.end(), 0xFF);
   RCLCPP_INFO(rclcpp::get_logger("BLD305S"), "Motors initialized and stopped.");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -108,24 +115,38 @@ hardware_interface::return_type BLD305SHardware::read(
 hardware_interface::return_type BLD305SHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  // Deduplicate: build address → (ctrl, speed) using the first joint per address
+  std::map<int, std::pair<uint16_t, uint16_t>> addr_cmds;
   for (size_t i = 0; i < motors_.size(); ++i) {
+    int addr = motors_[i].address;
+    if (addr_cmds.count(addr)) { continue; }  // already set by earlier joint
+
     double vel = hw_commands_[i];
     if (motors_[i].invert) { vel = -vel; }
 
     double rpm = std::abs(vel) * 60.0 / (2.0 * M_PI);
-    auto speed_val = static_cast<uint16_t>(std::clamp(rpm, 0.0, max_rpm_));  // direct RPM
+    auto speed_val = static_cast<uint16_t>(std::clamp(rpm, 0.0, max_rpm_));
 
     uint16_t ctrl_val;
     if (vel > 0.05)       ctrl_val = 1;  // forward
     else if (vel < -0.05) ctrl_val = 2;  // reverse
     else                  ctrl_val = 0;  // stop
 
-    modbus_set_slave(ctx_, motors_[i].address);
-    if (ctrl_val != prev_ctrl_[i]) {              // direction first (only on change)
+    addr_cmds[addr] = {ctrl_val, speed_val};
+  }
+
+  // Write each unique address once; skip unchanged values
+  for (const auto & [addr, cmd] : addr_cmds) {
+    auto [ctrl_val, speed_val] = cmd;
+    modbus_set_slave(ctx_, addr);
+    if (ctrl_val != prev_ctrl_map_[addr]) {
       modbus_write_register(ctx_, REG_CONTROL, ctrl_val);
-      prev_ctrl_[i] = ctrl_val;
+      prev_ctrl_map_[addr] = ctrl_val;
     }
-    modbus_write_register(ctx_, REG_SPEED, speed_val);  // speed second, every cycle
+    if (speed_val != prev_speed_map_[addr]) {
+      modbus_write_register(ctx_, REG_SPEED, speed_val);
+      prev_speed_map_[addr] = speed_val;
+    }
   }
   return hardware_interface::return_type::OK;
 }

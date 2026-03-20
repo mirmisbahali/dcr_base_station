@@ -6,6 +6,7 @@
 #include "rclcpp_lifecycle/state.hpp"
 
 #include <modbus/modbus.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -45,11 +46,12 @@ private:
   int baud_rate_{9600};
   double max_rpm_{7000.0};
 
-  std::vector<MotorConfig> motors_;     // one per joint, in joint order
-  std::vector<double> hw_commands_;     // velocity commands (rad/s)
-  std::vector<double> hw_velocities_;   // state: actual velocity (rad/s)
-  std::vector<double> hw_positions_;    // state: integrated position (rad)
-  std::vector<uint16_t> prev_ctrl_;     // cached direction per motor
+  std::vector<MotorConfig> motors_;           // one per joint, in joint order
+  std::vector<double> hw_commands_;           // velocity commands (rad/s)
+  std::vector<double> hw_velocities_;         // state: actual velocity (rad/s)
+  std::vector<double> hw_positions_;          // state: integrated position (rad)
+  std::map<int, uint16_t> prev_ctrl_map_;     // cached direction per unique address
+  std::map<int, uint16_t> prev_speed_map_;    // cached speed per unique address
 };
 
 }  // namespace rover_motor_driver
