@@ -8,7 +8,7 @@ namespace rover_motor_driver
 {
 
 // BLD-305S Modbus register addresses
-static constexpr uint16_t REG_SPEED        = 0x0056;  // write: 0-4000
+static constexpr uint16_t REG_SPEED        = 0x0056;  // write: direct RPM (0–max_rpm)
 static constexpr uint16_t REG_CONTROL      = 0x0066;  // write: 0=stop,1=fwd,2=rev,3=brake
 static constexpr uint16_t REG_ACTUAL_SPEED = 0x005F;  // read: actual speed
 
@@ -71,12 +71,15 @@ hardware_interface::CallbackReturn BLD305SHardware::on_configure(
 hardware_interface::CallbackReturn BLD305SHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // Ensure all motors are stopped on activation
   for (const auto & m : motors_) {
     modbus_set_slave(ctx_, m.address);
-    modbus_write_register(ctx_, REG_CONTROL, 0);
+    modbus_write_register(ctx_, 0x0136, 0x0001);  // internal control mode
+    modbus_write_register(ctx_, 0x0116, 0x0002);  // pole pairs = 2
+    modbus_write_register(ctx_, REG_CONTROL, 0);  // stop
   }
-  RCLCPP_INFO(rclcpp::get_logger("BLD305S"), "All motors stopped and ready.");
+  // reset direction cache so first write() sends direction to every motor
+  std::fill(prev_ctrl_.begin(), prev_ctrl_.end(), 0xFF);
+  RCLCPP_INFO(rclcpp::get_logger("BLD305S"), "Motors initialized and stopped.");
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -110,8 +113,7 @@ hardware_interface::return_type BLD305SHardware::write(
     if (motors_[i].invert) { vel = -vel; }
 
     double rpm = std::abs(vel) * 60.0 / (2.0 * M_PI);
-    auto speed_val = static_cast<uint16_t>(
-      std::clamp(rpm / max_rpm_ * 4000.0, 0.0, 4000.0));
+    auto speed_val = static_cast<uint16_t>(std::clamp(rpm, 0.0, max_rpm_));  // direct RPM
 
     uint16_t ctrl_val;
     if (vel > 0.05)       ctrl_val = 1;  // forward
@@ -119,11 +121,11 @@ hardware_interface::return_type BLD305SHardware::write(
     else                  ctrl_val = 0;  // stop
 
     modbus_set_slave(ctx_, motors_[i].address);
-    modbus_write_register(ctx_, REG_SPEED, speed_val);          // always write speed
-    if (ctrl_val != prev_ctrl_[i]) {                            // only write direction on change
+    if (ctrl_val != prev_ctrl_[i]) {              // direction first (only on change)
       modbus_write_register(ctx_, REG_CONTROL, ctrl_val);
       prev_ctrl_[i] = ctrl_val;
     }
+    modbus_write_register(ctx_, REG_SPEED, speed_val);  // speed second, every cycle
   }
   return hardware_interface::return_type::OK;
 }

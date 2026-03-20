@@ -114,9 +114,9 @@
   <ros2_control name="rover_hardware" type="system">
     <hardware>
       <plugin>rover_motor_driver/BLD305SHardware</plugin>
-      <param name="serial_port">/dev/ttyUSB0</param>
+      <param name="serial_port">/dev/ttyACM0</param>
       <param name="baud_rate">9600</param>
-      <param name="max_rpm">7000</param>
+      <param name="max_rpm">3500</param>
     </hardware>
 
     <joint name="joint_wheel_front_left">
