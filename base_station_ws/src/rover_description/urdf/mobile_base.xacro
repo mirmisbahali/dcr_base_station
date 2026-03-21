@@ -1,11 +1,24 @@
 <?xml version="1.0"?>
-<robot name="rover">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <material name="blue">
-    <color rgba="0.0 0.0 1.0 1.0"/>
-  </material>
+  <!--
+    MOBILE BASE — LINKS AND JOINTS
+    ==============================
+    Defines the physical structure of the rover chassis and wheels.
+    Edit this file to change geometry, dimensions, or joint types.
 
-  <!-- Chassis 0.7m long (X), 0.45m wide (Y), 0.2m tall (Z) -->
+    Layout:
+      base_link  ← chassis box (0.7m L x 0.45m W x 0.2m H)
+      6 x wheel links  (cylinder r=0.1m, l=0.1m) — continuous joints around Y axis
+        Left side:  wheel_front_left, wheel_mid_left, wheel_rear_left
+        Right side: wheel_front_right, wheel_mid_right, wheel_rear_right
+
+    Offset conventions:
+      Y-offset = chassis_half_width (0.225) + wheel_half_length (0.05) = 0.275m
+      Z-offset = -chassis_half_height = -0.1m  (axle flush with chassis bottom)
+  -->
+
+  <!-- ==================== CHASSIS ==================== -->
   <link name="base_link">
     <visual>
       <geometry><box size="0.7 0.45 0.2"/></geometry>
@@ -13,8 +26,8 @@
     </visual>
   </link>
 
-  <!-- Wheel links cylinder radius=0.1m, length=0.1m -->
-  <!-- Visual rotated 90deg around X so cylinder disk faces forward (XZ plane) -->
+  <!-- ==================== WHEEL LINKS ==================== -->
+  <!-- Visual rotated 90deg around X so the cylinder disk faces outward (Y axis) -->
 
   <link name="wheel_front_left">
     <visual>
@@ -64,9 +77,7 @@
     </visual>
   </link>
 
-  <!-- Wheel joints continuous (spin around Y axis) -->
-  <!-- Y-offset chassis_half_width(0.225) + wheel_half_length(0.05) = 0.275 -->
-  <!-- Z-offset -chassis_half_height = -0.1 (axle flush with chassis bottom) -->
+  <!-- ==================== WHEEL JOINTS ==================== -->
 
   <joint name="joint_wheel_front_left" type="continuous">
     <parent link="base_link"/>

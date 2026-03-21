@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    COSMETIC PROPERTIES ONLY
+    ========================
+    This file defines visual materials (colours) used by the robot model.
+    These have NO effect on physics, collision, or control behaviour.
+    If you are debugging functionality (e.g. joint movement, hardware comms),
+    do NOT waste time here — nothing in this file affects runtime behaviour.
+  -->
+
+  <material name="blue">
+    <color rgba="0.0 0.0 1.0 1.0"/>
+  </material>
+
+</robot>

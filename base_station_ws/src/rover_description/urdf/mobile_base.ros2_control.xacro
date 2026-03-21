@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    ROS 2 CONTROL — HARDWARE INTERFACE
+    ====================================
+    This file wires the joints defined in mobile_base.xacro to a hardware plugin.
+    Edit this file when:
+      - Changing the hardware plugin (e.g. switching from mock to real driver)
+      - Adding/removing joints from control
+      - Tuning hardware parameters (baud rate, device path, etc.)
+
+    The <ros2_control> block is a placeholder — populate it when the
+    hardware driver package (rover_motor_driver) is ready.
+  -->
+
+  <ros2_control name="rover_hardware" type="system">
+    <!-- hardware plugin goes here, e.g.:
+    <hardware>
+      <plugin>rover_motor_driver/BLD305SHardware</plugin>
+      <param name="device">/dev/ttyUSB0</param>
+    </hardware>
+    <joint name="joint_wheel_front_left">
+      <command_interface name="velocity"/>
+      <state_interface name="velocity"/>
+    </joint>
+    ... repeat for all 6 wheel joints ...
+    -->
+  </ros2_control>
+
+</robot>
