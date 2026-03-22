@@ -3,12 +3,12 @@
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
 import CameraFeedPanel from '@/components/camera/CameraFeedPanel';
-import { useGamepad } from '@/hooks/useGamepad';
+import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
 
 function GamepadIndicator() {
   const { isConnected } = useROSConnection();
-  const { connected, gamepadName } = useGamepad();
+  const { connected, gamepadName } = useArmGamepad();
 
   if (!isConnected) return null;
 
