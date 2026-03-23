@@ -6,8 +6,10 @@ import ConnectionManager from '@/components/control/ConnectionManager';
 import EmergencyStop from '@/components/control/EmergencyStop';
 import ArmModeIndicator from '@/components/arm/ArmModeIndicator';
 import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
+import CameraStream from '@/components/camera/CameraStream';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
+import { DEFAULT_CAMERAS } from '@/lib/utils/constants';
 
 function ArmControlPanel() {
   const { isConnected } = useROSConnection();
@@ -65,18 +67,22 @@ function ArmStatusArea() {
     );
   }
 
+  const armCam = DEFAULT_CAMERAS[2];
+
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" sx={{ color: 'primary.main', mb: 2 }}>
-        Arm Control — Laptop B
-      </Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-        This page publishes joystick input directly to <code>/joy</code> →{' '}
-        <code>motor_node</code> on the rover.
-      </Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        Laptop A (Drive) connects at <code>/</code>. Both share rosbridge port 9090.
-      </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1, p: 1 }}>
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <CameraStream topic={armCam.topic} label={armCam.label} />
+      </Box>
+      <Box sx={{ p: 1 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+          This page publishes joystick input directly to <code>/joy</code> →{' '}
+          <code>motor_node</code> on the rover.
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Laptop A (Drive) connects at <code>/</code>. Both share rosbridge port 9090.
+        </Typography>
+      </Box>
     </Box>
   );
 }

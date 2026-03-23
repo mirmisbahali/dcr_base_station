@@ -9,7 +9,7 @@ import CameraSelector from './CameraSelector';
  * 2x2 grid of camera feeds with per-cell topic selection.
  *
  * @param {Object} props
- * @param {Array<{ topic: string, label: string }>} props.cameras - Array of 4 camera configs
+ * @param {Array<{ topic: string, label: string }>} props.cameras - Array of camera configs
  * @param {Function} props.onCameraChange - Called with (index, newTopic) when user changes a camera
  * @param {Object} [props.streamOptions] - Shared quality/resolution options
  */
