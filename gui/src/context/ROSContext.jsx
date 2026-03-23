@@ -8,25 +8,9 @@ const ROSContext = createContext(null);
 export const ROSProvider = ({ children }) => {
   const [ros, setRos] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [roverIP, setRoverIP] = useState(() => {
-    // Load from localStorage if available (browser only)
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('roverIP') || 'rover.local';
-    }
-    return 'rover.local';
-  });
-  const [roverPort, setRoverPort] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('roverPort') || '9091';
-    }
-    return '9091';
-  });
-  const [videoPort, setVideoPort] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('videoPort') || '8080';
-    }
-    return '8080';
-  });
+  const [roverIP, setRoverIP] = useState('rover.local');
+  const [roverPort, setRoverPort] = useState('9090');
+  const [videoPort, setVideoPort] = useState('8080');
   const [connectionError, setConnectionError] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -37,6 +21,9 @@ export const ROSProvider = ({ children }) => {
       setIsConnecting(false);
       if (connected) {
         setConnectionError(null);
+        setRos(rosBridge.getConnection());
+      } else {
+        setRos(null);
       }
     };
 
@@ -65,11 +52,6 @@ export const ROSProvider = ({ children }) => {
 
       const connection = await rosBridge.connect(url);
       setRos(connection);
-
-      // Save IP to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('roverIP', targetIP);
-      }
 
       return connection;
     } catch (error) {
@@ -107,23 +89,14 @@ export const ROSProvider = ({ children }) => {
    */
   const updateRoverIP = useCallback((newIP) => {
     setRoverIP(newIP);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('roverIP', newIP);
-    }
   }, []);
 
   const updateRoverPort = useCallback((newPort) => {
     setRoverPort(newPort);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('roverPort', newPort);
-    }
   }, []);
 
   const updateVideoPort = useCallback((newPort) => {
     setVideoPort(newPort);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('videoPort', newPort);
-    }
   }, []);
 
   const value = {

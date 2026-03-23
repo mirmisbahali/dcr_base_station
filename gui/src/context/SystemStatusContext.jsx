@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useROSConnection } from '@/hooks/useROSConnection';
-import { useEstopHeartbeat } from '@/hooks/useEstopHeartbeat';
 import { subscribeTopic } from '@/lib/ros/topicSubscriber';
 import { TOPICS, MSG_TYPES } from '@/lib/utils/constants';
 
@@ -19,7 +18,6 @@ const INITIAL_STATUS = {
 
 export const SystemStatusProvider = ({ children }) => {
   const { ros, isConnected } = useROSConnection();
-  useEstopHeartbeat();
   const [status, setStatus] = useState(INITIAL_STATUS);
 
   // Subscribe to all status topics when connected

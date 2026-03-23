@@ -120,7 +120,7 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
       {/* MJPEG stream */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        key={retryKey}
+        key={`${topic}-${retryKey}`}
         src={streamUrl}
         alt={label || `Camera: ${topic}`}
         onLoad={handleLoad}

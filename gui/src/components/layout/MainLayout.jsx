@@ -1,10 +1,13 @@
 'use client';
 
-import React from 'react';
-import { Box } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, IconButton } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import Header from './Header';
 
 const MainLayout = ({ cameraPanel, controlPanel }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <Box
       sx={{
@@ -31,9 +34,30 @@ const MainLayout = ({ cameraPanel, controlPanel }) => {
           {cameraPanel}
         </Box>
 
-        {/* Sidebar — fixed 260px */}
-        <Box sx={{ width: 260, flexShrink: 0, overflowY: 'auto' }}>
-          {controlPanel}
+        {/* Sidebar — collapsible */}
+        <Box
+          sx={{
+            width: sidebarOpen ? 260 : 36,
+            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'width 0.2s ease',
+            overflow: 'hidden',
+          }}
+        >
+          <IconButton
+            onClick={() => setSidebarOpen((o) => !o)}
+            size="small"
+            sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
+          >
+            {sidebarOpen ? <ChevronRight /> : <ChevronLeft />}
+          </IconButton>
+
+          {sidebarOpen && (
+            <Box sx={{ flex: 1, overflowY: 'auto' }}>
+              {controlPanel}
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>

@@ -3,8 +3,6 @@
 import { Box, Typography } from '@mui/material';
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
-import EmergencyStop from '@/components/control/EmergencyStop';
-import ArmModeIndicator from '@/components/arm/ArmModeIndicator';
 import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
 import CameraStream from '@/components/camera/CameraStream';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
@@ -21,10 +19,6 @@ function ArmControlPanel() {
 
       {isConnected && (
         <>
-          <EmergencyStop />
-          <ArmModeIndicator />
-          <MotorStatusPanel />
-
           <Box
             sx={{
               p: 1.5,
@@ -70,18 +64,12 @@ function ArmStatusArea() {
   const armCam = DEFAULT_CAMERAS[2];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1, p: 1 }}>
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'row', height: '100%', gap: 1, p: 1 }}>
+      <Box sx={{ flex: 1, minWidth: 0, height: '100%' }}>
         <CameraStream topic={armCam.topic} label={armCam.label} />
       </Box>
-      <Box sx={{ p: 1 }}>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-          This page publishes joystick input directly to <code>/joy</code> →{' '}
-          <code>motor_node</code> on the rover.
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Laptop A (Drive) connects at <code>/</code>. Both share rosbridge port 9090.
-        </Typography>
+      <Box sx={{ width: 260, flexShrink: 0, overflowY: 'auto' }}>
+        <MotorStatusPanel />
       </Box>
     </Box>
   );

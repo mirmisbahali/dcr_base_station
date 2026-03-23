@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useROSConnection } from './useROSConnection';
 import { STREAM_DEFAULTS } from '@/lib/utils/constants';
 
@@ -21,6 +21,11 @@ export function useCameraStream(topic, options = {}) {
   const { roverIP, videoPort, isConnected } = useROSConnection();
   const [streamError, setStreamError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setStreamError(false);
+  }, [topic]);
 
   const quality = options.quality ?? STREAM_DEFAULTS.quality;
   const width = options.width ?? STREAM_DEFAULTS.width;

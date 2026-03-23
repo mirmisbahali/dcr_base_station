@@ -10,7 +10,6 @@ export const TOPICS = {
   MOTOR_STAT2: '/motor_stat_2',
   ARM_MODE: '/arm/mode',
   JOY: '/joy',
-  EMERGENCY_STOP: '/emergency_stop',
 };
 
 // ROS Message Types

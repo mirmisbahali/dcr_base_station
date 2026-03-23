@@ -1,106 +1,158 @@
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import GlowCard from '@/components/common/GlowCard';
 import { useROSTopic } from '@/hooks/useROSTopic';
 import { TOPICS, MSG_TYPES } from '@/lib/utils/constants';
 
+const TILE_SX = {
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 0.25,
+  p: 0.75,
+  borderRadius: 1,
+  backgroundColor: 'background.default',
+  border: '1px solid #00d9ff22',
+  minWidth: 0,
+};
+
+function MetricTile({ label, value, unit, color = 'primary.main' }) {
+  return (
+    <Box sx={TILE_SX}>
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem' }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color, fontSize: '0.85rem', lineHeight: 1.2 }}
+      >
+        {value}
+        {unit && (
+          <Typography component="span" sx={{ fontSize: '0.65rem', color: 'text.disabled', ml: 0.5 }}>
+            {unit}
+          </Typography>
+        )}
+      </Typography>
+    </Box>
+  );
+}
+
+function SectionHeader({ label, motorId }) {
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+      <Typography
+        variant="caption"
+        sx={{ color: 'primary.main', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, fontSize: '0.65rem' }}
+      >
+        {label}
+      </Typography>
+      {motorId != null && (
+        <Typography
+          variant="caption"
+          sx={{
+            px: 0.75, py: 0.1, borderRadius: 0.5,
+            backgroundColor: '#00d9ff22', border: '1px solid #00d9ff44',
+            color: 'primary.main', fontFamily: 'Roboto Mono, monospace',
+            fontSize: '0.6rem', letterSpacing: '0.05em',
+          }}
+        >
+          MTR {motorId}
+        </Typography>
+      )}
+    </Box>
+  );
+}
+
+function NoData({ topic }) {
+  return (
+    <Box sx={{ py: 1.5, textAlign: 'center' }}>
+      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+        Waiting for {topic}
+      </Typography>
+    </Box>
+  );
+}
+
 /**
- * MotorStatusPanel — displays live feedback from arm motors.
- *
- * Subscribes to /motor_stat_1 (id, angle, speed, current, temp) and
- * /motor_stat_2 (id, busv, busc, mode, fault).
+ * MotorStatusPanel — compact metric-tile layout.
+ * Displays live feedback from /motor_stat_1 and /motor_stat_2 without horizontal scrolling.
  */
 const MotorStatusPanel = () => {
   const { message: stat1 } = useROSTopic(TOPICS.MOTOR_STAT1, MSG_TYPES.MOTOR_STAT1);
   const { message: stat2 } = useROSTopic(TOPICS.MOTOR_STAT2, MSG_TYPES.MOTOR_STAT2);
 
-  const stat1Data = stat1 ? [stat1] : [];
-  const stat2Data = stat2 ? [stat2] : [];
+  const faultColor = stat2?.fault && stat2.fault !== 'none' ? '#ff0055' : '#00ff88';
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" sx={{ color: 'primary.main', mb: 1 }}>
-        Motor Status
-      </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 
-      <TableContainer component={Paper} sx={{ backgroundColor: 'background.paper', mb: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Motor</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Angle (°)</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Speed (RPM)</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Current (A)</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Temp (°C)</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {stat1Data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ color: 'text.disabled' }}>
-                  No data — waiting for /motor_stat_1
-                </TableCell>
-              </TableRow>
-            ) : (
-              stat1Data.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell>{s.id}</TableCell>
-                  <TableCell>{Number(s.angle).toFixed(2)}</TableCell>
-                  <TableCell>{Number(s.speed).toFixed(1)}</TableCell>
-                  <TableCell>{Number(s.current).toFixed(2)}</TableCell>
-                  <TableCell>{s.temp}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Mechanical section */}
+      <GlowCard sx={{ p: 1.25 }}>
+        <SectionHeader label="Mechanical" motorId={stat1?.id} />
+        {!stat1 ? (
+          <NoData topic="/motor_stat_1" />
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <MetricTile label="Angle" value={Number(stat1.angle).toFixed(2)} unit="°" />
+              <MetricTile label="Speed" value={Number(stat1.speed).toFixed(1)} unit="RPM" />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <MetricTile label="Current" value={Number(stat1.current).toFixed(2)} unit="A" />
+              <MetricTile
+                label="Temp"
+                value={stat1.temp}
+                unit="°C"
+                color={stat1.temp > 70 ? '#ffaa00' : stat1.temp > 85 ? '#ff0055' : 'primary.main'}
+              />
+            </Box>
+          </Box>
+        )}
+      </GlowCard>
 
-      <TableContainer component={Paper} sx={{ backgroundColor: 'background.paper' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Motor</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Bus V</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Bus A</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Mode</TableCell>
-              <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>Fault</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {stat2Data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ color: 'text.disabled' }}>
-                  No data — waiting for /motor_stat_2
-                </TableCell>
-              </TableRow>
-            ) : (
-              stat2Data.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell>{s.id}</TableCell>
-                  <TableCell>{Number(s.busv).toFixed(1)}</TableCell>
-                  <TableCell>{Number(s.busc).toFixed(2)}</TableCell>
-                  <TableCell>{s.mode}</TableCell>
-                  <TableCell sx={{ color: s.fault && s.fault !== 'none' ? 'error.main' : 'text.primary' }}>
-                    {s.fault || '—'}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Electrical section */}
+      <GlowCard sx={{ p: 1.25 }}>
+        <SectionHeader label="Electrical" motorId={stat2?.id} />
+        {!stat2 ? (
+          <NoData topic="/motor_stat_2" />
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <MetricTile label="Bus V" value={Number(stat2.busv).toFixed(1)} unit="V" />
+              <MetricTile label="Bus A" value={Number(stat2.busc).toFixed(2)} unit="A" />
+            </Box>
+
+            {/* Mode */}
+            <Box sx={{ ...TILE_SX, flex: 'unset' }}>
+              <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem' }}>
+                Mode
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: 'primary.main', fontSize: '0.85rem' }}>
+                {stat2.mode || '—'}
+              </Typography>
+            </Box>
+
+            {/* Fault */}
+            <Box sx={{ ...TILE_SX, flex: 'unset', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: faultColor, boxShadow: `0 0 6px ${faultColor}`, flexShrink: 0 }} />
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem', display: 'block' }}>
+                  Fault
+                </Typography>
+                <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: faultColor, fontSize: '0.85rem' }}>
+                  {stat2.fault || '—'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
+      </GlowCard>
+
     </Box>
   );
 };
