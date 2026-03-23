@@ -21,7 +21,7 @@ function applyDeadzone(value, deadzone) {
  *
  * @returns {{ connected: boolean, gamepadName: string|null }}
  */
-export function useArmGamepad() {
+export function useArmGamepad({ topic = '/joy' } = {}) {
   const { ros, isConnected } = useROSConnection();
   const [gamepadConnected, setGamepadConnected] = useState(false);
   const [gamepadName, setGamepadName] = useState(null);
@@ -36,7 +36,7 @@ export function useArmGamepad() {
     if (isConnected && ros) {
       joyTopicRef.current = new Topic({
         ros,
-        name: '/joy',
+        name: topic,
         messageType: 'sensor_msgs/Joy',
       });
     } else {
@@ -99,12 +99,18 @@ export function useArmGamepad() {
       }
       if (!activeGamepad) return;
 
-      const axes = Array.from(activeGamepad.axes).map(
-        (v) => applyDeadzone(v, DEADZONE)
-      );
-      const buttons = Array.from(activeGamepad.buttons).map(
-        (b) => (b.pressed ? 1 : 0)
-      );
+      const MIN_AXES = 8;
+      const MIN_BUTTONS = 12;
+
+      const rawAxes = Array.from(activeGamepad.axes).map((v) => applyDeadzone(v, DEADZONE));
+      const rawButtons = Array.from(activeGamepad.buttons).map((b) => (b.pressed ? 1 : 0));
+
+      const axes = rawAxes.length >= MIN_AXES
+        ? rawAxes
+        : [...rawAxes, ...new Array(MIN_AXES - rawAxes.length).fill(0.0)];
+      const buttons = rawButtons.length >= MIN_BUTTONS
+        ? rawButtons
+        : [...rawButtons, ...new Array(MIN_BUTTONS - rawButtons.length).fill(0)];
 
       joyTopicRef.current.publish({
         header: { stamp: { sec: 0, nanosec: 0 }, frame_id: '' },

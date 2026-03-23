@@ -7,11 +7,11 @@ import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
 import CameraStream from '@/components/camera/CameraStream';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
-import { DEFAULT_CAMERAS } from '@/lib/utils/constants';
+import { DEFAULT_CAMERAS, TOPICS } from '@/lib/utils/constants';
 
 function ArmControlPanel() {
   const { isConnected } = useROSConnection();
-  const { connected, gamepadName } = useArmGamepad();
+  const { connected, gamepadName } = useArmGamepad({ topic: TOPICS.ARM_JOY });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -33,7 +33,7 @@ function ArmControlPanel() {
             }}
           >
             {connected
-              ? `Gamepad: ${gamepadName ?? 'connected'} — publishing /joy`
+              ? `Gamepad: ${gamepadName ?? 'connected'} — publishing /arm/joy`
               : 'No gamepad detected — connect a controller to control the arm'}
           </Box>
         </>
