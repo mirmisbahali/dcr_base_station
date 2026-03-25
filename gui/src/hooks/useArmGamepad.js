@@ -107,7 +107,7 @@ export function useArmGamepad({ topic = '/joy' } = {}) {
       // jsdev axes:   [Lx, Ly, L2, Rx, Ry, R2, DpadX, DpadY]
       // Browser D-pad: buttons[12]=up, [13]=down, [14]=left, [15]=right (not axes)
       const dpadX = (rawButtons[14] ?? 0) - (rawButtons[15] ?? 0); // left=+1, right=-1
-      const dpadY = (rawButtons[12] ?? 0) - (rawButtons[13] ?? 0); // up=+1, down=-1
+      const dpadY = (rawButtons[13] ?? 0) - (rawButtons[12] ?? 0); // up=-1, down=+1
 
       const axes = [
         -(rawAxes[0] ?? 0.0),  // [0] Lx      — motor 1 / IK x  (left=+1)
