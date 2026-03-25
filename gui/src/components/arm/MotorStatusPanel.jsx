@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import GlowCard from '@/components/common/GlowCard';
 import { useROSTopic } from '@/hooks/useROSTopic';
@@ -42,16 +42,19 @@ function MetricTile({ label, value, unit, color = 'primary.main' }) {
   );
 }
 
-function SectionHeader({ label, motorId }) {
+function MotorCard({ id, stat1, stat2 }) {
+  const faultColor = stat2?.fault && stat2.fault !== 'none' ? '#ff0055' : '#00ff88';
+
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-      <Typography
-        variant="caption"
-        sx={{ color: 'primary.main', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, fontSize: '0.65rem' }}
-      >
-        {label}
-      </Typography>
-      {motorId != null && (
+    <GlowCard sx={{ p: 1.25 }}>
+      {/* Motor ID header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+        <Typography
+          variant="caption"
+          sx={{ color: 'primary.main', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, fontSize: '0.65rem' }}
+        >
+          Motor {id}
+        </Typography>
         <Typography
           variant="caption"
           sx={{
@@ -61,98 +64,101 @@ function SectionHeader({ label, motorId }) {
             fontSize: '0.6rem', letterSpacing: '0.05em',
           }}
         >
-          MTR {motorId}
+          MTR {id}
         </Typography>
-      )}
-    </Box>
-  );
-}
+      </Box>
 
-function NoData({ topic }) {
-  return (
-    <Box sx={{ py: 1.5, textAlign: 'center' }}>
-      <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
-        Waiting for {topic}
-      </Typography>
-    </Box>
+      {!stat1 && !stat2 ? (
+        <Box sx={{ py: 1, textAlign: 'center' }}>
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+            Waiting for motor {id}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {/* Mechanical */}
+          {stat1 && (
+            <>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <MetricTile label="Angle" value={Number(stat1.angle).toFixed(2)} unit="°" />
+                <MetricTile label="Speed" value={Number(stat1.speed).toFixed(1)} unit="RPM" />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <MetricTile label="Current" value={Number(stat1.current).toFixed(2)} unit="A" />
+                <MetricTile
+                  label="Temp"
+                  value={stat1.temp}
+                  unit="°C"
+                  color={stat1.temp > 85 ? '#ff0055' : stat1.temp > 70 ? '#ffaa00' : 'primary.main'}
+                />
+              </Box>
+            </>
+          )}
+
+          {/* Electrical */}
+          {stat2 && (
+            <>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <MetricTile label="Bus V" value={Number(stat2.busv).toFixed(1)} unit="V" />
+                <MetricTile label="Bus A" value={Number(stat2.busc).toFixed(2)} unit="A" />
+              </Box>
+
+              <Box sx={{ ...TILE_SX, flex: 'unset' }}>
+                <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem' }}>
+                  Mode
+                </Typography>
+                <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: 'primary.main', fontSize: '0.85rem' }}>
+                  {stat2.mode || '—'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ ...TILE_SX, flex: 'unset', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: faultColor, boxShadow: `0 0 6px ${faultColor}`, flexShrink: 0 }} />
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem', display: 'block' }}>
+                    Fault
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: faultColor, fontSize: '0.85rem' }}>
+                    {stat2.fault || '—'}
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
+        </Box>
+      )}
+    </GlowCard>
   );
 }
 
 /**
- * MotorStatusPanel — compact metric-tile layout.
- * Displays live feedback from /motor_stat_1 and /motor_stat_2 without horizontal scrolling.
+ * MotorStatusPanel — shows live telemetry for all 6 arm motors.
+ * Accumulates per-motor messages by ID since the rover publishes one motor at a time.
  */
 const MotorStatusPanel = () => {
+  const [motors1, setMotors1] = useState({});
+  const [motors2, setMotors2] = useState({});
+
   const { message: stat1 } = useROSTopic(TOPICS.MOTOR_STAT1, MSG_TYPES.MOTOR_STAT1);
   const { message: stat2 } = useROSTopic(TOPICS.MOTOR_STAT2, MSG_TYPES.MOTOR_STAT2);
 
-  const faultColor = stat2?.fault && stat2.fault !== 'none' ? '#ff0055' : '#00ff88';
+  useEffect(() => {
+    if (stat1?.id != null) {
+      setMotors1(prev => ({ ...prev, [stat1.id]: stat1 }));
+    }
+  }, [stat1]);
+
+  useEffect(() => {
+    if (stat2?.id != null) {
+      setMotors2(prev => ({ ...prev, [stat2.id]: stat2 }));
+    }
+  }, [stat2]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-
-      {/* Mechanical section */}
-      <GlowCard sx={{ p: 1.25 }}>
-        <SectionHeader label="Mechanical" motorId={stat1?.id} />
-        {!stat1 ? (
-          <NoData topic="/motor_stat_1" />
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <MetricTile label="Angle" value={Number(stat1.angle).toFixed(2)} unit="°" />
-              <MetricTile label="Speed" value={Number(stat1.speed).toFixed(1)} unit="RPM" />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <MetricTile label="Current" value={Number(stat1.current).toFixed(2)} unit="A" />
-              <MetricTile
-                label="Temp"
-                value={stat1.temp}
-                unit="°C"
-                color={stat1.temp > 70 ? '#ffaa00' : stat1.temp > 85 ? '#ff0055' : 'primary.main'}
-              />
-            </Box>
-          </Box>
-        )}
-      </GlowCard>
-
-      {/* Electrical section */}
-      <GlowCard sx={{ p: 1.25 }}>
-        <SectionHeader label="Electrical" motorId={stat2?.id} />
-        {!stat2 ? (
-          <NoData topic="/motor_stat_2" />
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <MetricTile label="Bus V" value={Number(stat2.busv).toFixed(1)} unit="V" />
-              <MetricTile label="Bus A" value={Number(stat2.busc).toFixed(2)} unit="A" />
-            </Box>
-
-            {/* Mode */}
-            <Box sx={{ ...TILE_SX, flex: 'unset' }}>
-              <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem' }}>
-                Mode
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: 'primary.main', fontSize: '0.85rem' }}>
-                {stat2.mode || '—'}
-              </Typography>
-            </Box>
-
-            {/* Fault */}
-            <Box sx={{ ...TILE_SX, flex: 'unset', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: faultColor, boxShadow: `0 0 6px ${faultColor}`, flexShrink: 0 }} />
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.6rem', display: 'block' }}>
-                  Fault
-                </Typography>
-                <Typography variant="body2" sx={{ fontFamily: 'Roboto Mono, monospace', fontWeight: 700, color: faultColor, fontSize: '0.85rem' }}>
-                  {stat2.fault || '—'}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        )}
-      </GlowCard>
-
+      {[1, 2, 3, 4, 5, 6].map(id => (
+        <MotorCard key={id} id={id} stat1={motors1[id]} stat2={motors2[id]} />
+      ))}
     </Box>
   );
 };
