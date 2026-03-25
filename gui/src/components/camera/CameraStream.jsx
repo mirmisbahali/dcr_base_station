@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, Dialog } from '@mui/material';
 import {
   VideocamOff as DisconnectedIcon,
   Refresh as RetryIcon,
   BrokenImage as ErrorIcon,
+  Fullscreen as FullscreenIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useCameraStream } from '@/hooks/useCameraStream';
 
@@ -21,8 +23,8 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
   const { streamUrl, isAvailable, handleLoad, handleError, streamError, isLoading, retry } =
     useCameraStream(topic, streamOptions);
 
-  // Track key to force remount of img element on retry
   const [retryKey, setRetryKey] = useState(0);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
 
   const handleRetry = useCallback(() => {
     retry();
@@ -153,6 +155,70 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
           {label}
         </Typography>
       </Box>
+
+      {/* Fullscreen button */}
+      <IconButton
+        size="small"
+        onClick={() => setFullscreenOpen(true)}
+        sx={{
+          position: 'absolute',
+          top: 4,
+          right: 4,
+          zIndex: 2,
+          color: 'rgba(255,255,255,0.7)',
+          bgcolor: 'rgba(0,0,0,0.35)',
+          '&:hover': { bgcolor: 'rgba(0,0,0,0.6)', color: '#fff' },
+          p: 0.5,
+        }}
+      >
+        <FullscreenIcon fontSize="small" />
+      </IconButton>
+
+      {/* Fullscreen dialog */}
+      <Dialog
+        fullScreen
+        open={fullscreenOpen}
+        onClose={() => setFullscreenOpen(false)}
+        PaperProps={{ sx: { bgcolor: 'black' } }}
+      >
+        <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+          <IconButton
+            onClick={() => setFullscreenOpen(false)}
+            sx={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              color: 'white',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={streamUrl}
+            alt={label || `Camera: ${topic}`}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transform: 'rotate(180deg)' }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              py: 1,
+              px: 2,
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+            }}
+          >
+            <Typography variant="body2" sx={{ color: '#00d9ff', fontWeight: 600, letterSpacing: '0.05em' }}>
+              {label}
+            </Typography>
+          </Box>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

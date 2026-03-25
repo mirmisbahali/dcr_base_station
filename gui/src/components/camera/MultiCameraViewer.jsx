@@ -18,9 +18,10 @@ const MultiCameraViewer = ({ cameras, onCameraChange, streamOptions = {} }) => {
     <Box sx={{
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gridTemplateRows: '1fr 1fr',
+      gridTemplateRows: 'minmax(140px, 1fr) minmax(120px, 1fr)',
       gap: 1,
       height: '100%',
+      minHeight: 0,
     }}>
       {cameras.map((cam, index) => (
         <Box key={index} sx={{

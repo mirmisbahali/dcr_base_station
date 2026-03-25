@@ -18,9 +18,10 @@ const CameraFeedPanel = () => {
   const { isConnected, videoPort, updateVideoPort } = useROSConnection();
 
   // Per-slot camera assignments (initialize from defaults)
-  const [cameras, setCameras] = useState(() =>
-    DEFAULT_CAMERAS.map((cam) => ({ topic: cam.topic, label: cam.label }))
-  );
+  const [cameras, setCameras] = useState(() => [
+    ...DEFAULT_CAMERAS.map((cam) => ({ topic: cam.topic, label: cam.label })),
+    { topic: '', label: 'Empty' },
+  ]);
 
   // Stream quality settings
   const [quality, setQuality] = useState(STREAM_DEFAULTS.quality);
