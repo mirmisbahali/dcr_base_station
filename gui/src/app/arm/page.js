@@ -3,6 +3,7 @@
 import { Box, Typography } from '@mui/material';
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
+import EndEffectorControl from '@/components/control/EndEffectorControl';
 import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
 import CameraStream from '@/components/camera/CameraStream';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
@@ -36,6 +37,7 @@ function ArmControlPanel() {
               ? `Gamepad: ${gamepadName ?? 'connected'} — publishing /arm/joy`
               : 'No gamepad detected — connect a controller to control the arm'}
           </Box>
+          <EndEffectorControl />
         </>
       )}
     </Box>
