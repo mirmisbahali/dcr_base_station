@@ -130,6 +130,7 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
           height: '100%',
           objectFit: 'cover',
           display: 'block',
+          transform: 'rotate(180deg)',
         }}
       />
 
