@@ -21,7 +21,7 @@ const AntennaControl = () => {
 
   const handleSend = () => {
     if (letter) {
-      publish({ data: letter });
+      publish({ data: letter + '\n' });
     }
   };
 
