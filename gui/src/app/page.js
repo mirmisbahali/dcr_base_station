@@ -2,6 +2,7 @@
 
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
+import AntennaControl from '@/components/control/AntennaControl';
 import CameraFeedPanel from '@/components/camera/CameraFeedPanel';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
@@ -36,7 +37,7 @@ function GamepadIndicator() {
 
 export default function Home() {
   const cameraPanel = <CameraFeedPanel />;
-  const controlPanel = <ConnectionManager />;
+  const controlPanel = <><ConnectionManager /><AntennaControl /></>;
 
   return (
     <>

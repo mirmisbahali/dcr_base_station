@@ -11,6 +11,7 @@ export const TOPICS = {
   ARM_MODE: '/arm/mode',
   JOY: '/joy',
   ARM_JOY: '/arm/joy',
+  ANTENNA_TRIGGER: '/antenna/trigger',
 };
 
 // ROS Message Types
