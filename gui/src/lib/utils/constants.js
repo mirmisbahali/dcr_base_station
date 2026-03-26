@@ -43,7 +43,7 @@ export const DEFAULT_CAMERAS = [
 ];
 
 export const STREAM_DEFAULTS = {
-  type: 'h264',
+  type: 'ros_compressed',
   quality: 75,
   width: 320,
   height: 240,
