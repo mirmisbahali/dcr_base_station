@@ -119,13 +119,14 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
         </Box>
       )}
 
-      {/* MJPEG stream */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      {/* H.264 stream */}
+      <video
         key={`${topic}-${retryKey}`}
         src={streamUrl}
-        alt={label || `Camera: ${topic}`}
-        onLoad={handleLoad}
+        autoPlay
+        muted
+        playsInline
+        onLoadedData={handleLoad}
         onError={handleError}
         style={{
           width: '100%',
@@ -196,10 +197,11 @@ const CameraStream = ({ topic, label, streamOptions = {} }) => {
           >
             <CloseIcon />
           </IconButton>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <video
             src={streamUrl}
-            alt={label || `Camera: ${topic}`}
+            autoPlay
+            muted
+            playsInline
             style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transform: 'rotate(180deg)' }}
           />
           <Box

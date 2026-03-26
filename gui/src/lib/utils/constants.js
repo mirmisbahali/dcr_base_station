@@ -43,10 +43,10 @@ export const DEFAULT_CAMERAS = [
 ];
 
 export const STREAM_DEFAULTS = {
-  type: 'mjpeg',
-  quality: 80,
-  width: 640,
-  height: 480,
+  type: 'h264',
+  quality: 75,
+  width: 320,
+  height: 240,
 };
 
 // Default configurable nodes that can be launched from the GUI

@@ -42,6 +42,7 @@ export function useCameraStream(topic, options = {}) {
       `quality=${quality}`,
       `width=${width}`,
       `height=${height}`,
+      `default_transport=compressed`,
     ].join('&');
 
     return `http://${roverIP}:${videoPort}/stream?${queryParams}`;
