@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, Typography, TextField } from '@mui/material';
 import MainLayout from '@/components/layout/MainLayout';
 import ConnectionManager from '@/components/control/ConnectionManager';
 import EndEffectorControl from '@/components/control/EndEffectorControl';
@@ -8,7 +9,7 @@ import MotorStatusPanel from '@/components/arm/MotorStatusPanel';
 import CameraStream from '@/components/camera/CameraStream';
 import { useArmGamepad } from '@/hooks/useArmGamepad';
 import { useROSConnection } from '@/hooks/useROSConnection';
-import { DEFAULT_CAMERAS, TOPICS } from '@/lib/utils/constants';
+import { DEFAULT_STREAM_URLS, TOPICS } from '@/lib/utils/constants';
 
 function ArmControlPanel() {
   const { isConnected } = useROSConnection();
@@ -46,32 +47,34 @@ function ArmControlPanel() {
 
 function ArmStatusArea() {
   const { isConnected } = useROSConnection();
-
-  if (!isConnected) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          color: 'text.disabled',
-        }}
-      >
-        <Typography variant="h6">Connect to rover to see arm status</Typography>
-      </Box>
-    );
-  }
-
-  const armCam = DEFAULT_CAMERAS[2];
+  const defaultCam = DEFAULT_STREAM_URLS[2];
+  const [streamUrl, setStreamUrl] = useState(defaultCam.url);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', height: '100%', gap: 1, p: 1 }}>
-      <Box sx={{ flex: 1, minWidth: 0, height: '100%' }}>
-        <CameraStream topic={armCam.topic} label={armCam.label} />
+      <Box sx={{ flex: 1, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Stream URL (e.g. http://host:port/?action=stream)"
+          value={streamUrl}
+          onChange={(e) => setStreamUrl(e.target.value)}
+          slotProps={{
+            input: { sx: { fontSize: '0.75rem', fontFamily: 'monospace' } },
+          }}
+        />
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <CameraStream url={streamUrl} label={defaultCam.label} />
+        </Box>
       </Box>
       <Box sx={{ width: 260, flexShrink: 0, overflowY: 'auto' }}>
-        <MotorStatusPanel />
+        {isConnected ? (
+          <MotorStatusPanel />
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.disabled' }}>
+            <Typography variant="body2">Connect to rover to see arm status</Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

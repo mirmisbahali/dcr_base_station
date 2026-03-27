@@ -1,24 +1,22 @@
 'use client';
 
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, TextField } from '@mui/material';
 import CameraStream from './CameraStream';
-import CameraSelector from './CameraSelector';
 
 /**
- * 2x2 grid of camera feeds with per-cell topic selection.
+ * 2x2 grid of camera feeds with per-cell URL text fields.
  *
  * @param {Object} props
- * @param {Array<{ topic: string, label: string }>} props.cameras - Array of camera configs
- * @param {Function} props.onCameraChange - Called with (index, newTopic) when user changes a camera
- * @param {Object} [props.streamOptions] - Shared quality/resolution options
+ * @param {Array<{ url: string, label: string }>} props.cameras - Array of camera configs
+ * @param {Function} props.onCameraChange - Called with (index, newUrl) when user edits a URL
  */
-const MultiCameraViewer = ({ cameras, onCameraChange, streamOptions = {} }) => {
+const MultiCameraViewer = ({ cameras, onCameraChange }) => {
   return (
     <Box sx={{
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gridTemplateRows: 'minmax(140px, 1fr) minmax(120px, 1fr)',
+      gridTemplateRows: '1fr',
       gap: 1,
       height: '100%',
       minHeight: 0,
@@ -29,19 +27,19 @@ const MultiCameraViewer = ({ cameras, onCameraChange, streamOptions = {} }) => {
           flexDirection: 'column',
           gap: 0.5,
           minHeight: 0,
-          ...(index === 0 && { gridColumn: '1 / span 2' }),
         }}>
-          <CameraSelector
-            value={cam.topic}
-            onChange={(newTopic) => onCameraChange(index, newTopic)}
-            label={`Slot ${index + 1}`}
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Stream URL (e.g. http://host:port/?action=stream)"
+            value={cam.url}
+            onChange={(e) => onCameraChange(index, e.target.value)}
+            slotProps={{
+              input: { sx: { fontSize: '0.75rem', fontFamily: 'monospace' } },
+            }}
           />
           <Box sx={{ flex: 1, minHeight: 0 }}>
-            <CameraStream
-              topic={cam.topic}
-              label={cam.label}
-              streamOptions={streamOptions}
-            />
+            <CameraStream url={cam.url} label={cam.label} />
           </Box>
         </Box>
       ))}

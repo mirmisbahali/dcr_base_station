@@ -33,21 +33,13 @@ export const SRV_TYPES = {
   SET_BOOL: 'std_srvs/srv/SetBool',
 };
 
-// Camera Configuration
-export const DEFAULT_VIDEO_PORT = '8080';
-
-export const DEFAULT_CAMERAS = [
-  { id: 'cam1', label: 'Front Camera', topic: '/camera1/image_raw' },
-  { id: 'cam2', label: 'Rear Camera', topic: '/camera2/image_raw' },
-  { id: 'cam3', label: 'Arm Camera', topic: '/camera3/image_raw' },
+// Camera Configuration (mjpg-streamer URLs — format: http://<host>:<port>/?action=stream)
+export const DEFAULT_STREAM_URLS = [
+  { label: 'Front Camera', url: 'http://dcr-rover.local:8080/?action=stream' },
+  { label: 'Rear Camera',  url: 'http://dcr-rover.local:8090/?action=stream' },
+  { label: 'Arm Camera',   url: 'http://dcr-rover.local:8091/?action=stream' },
+  { label: 'Empty',        url: '' },
 ];
-
-export const STREAM_DEFAULTS = {
-  type: 'ros_compressed',
-  quality: 75,
-  width: 320,
-  height: 240,
-};
 
 // Default configurable nodes that can be launched from the GUI
 export const DEFAULT_NODES = [
