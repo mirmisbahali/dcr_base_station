@@ -1,21 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import Header from './Header';
 
 const MainLayout = ({ cameraPanel, controlPanel }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  // Give the page document focus on mount so the browser Gamepad API fires
+  // gamepadconnected as soon as the user presses a button, without requiring
+  // a prior mouse click.
+  useEffect(() => {
+    containerRef.current?.focus();
+  }, []);
 
   return (
     <Box
+      ref={containerRef}
+      tabIndex={-1}
       sx={{
         height: '100vh',
         backgroundColor: 'background.default',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        outline: 'none',
       }}
     >
       <Header />

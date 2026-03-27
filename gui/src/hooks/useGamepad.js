@@ -64,18 +64,25 @@ export function useGamepad() {
       }
     };
 
+    const checkExisting = () => {
+      const existing = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of existing) {
+        if (gp) { setGamepadConnected(true); setGamepadName(gp.id); return; }
+      }
+    };
+
     window.addEventListener('gamepadconnected', onConnect);
     window.addEventListener('gamepaddisconnected', onDisconnect);
+    // Re-check when the tab regains focus (e.g. user switches back from another tab)
+    window.addEventListener('focus', checkExisting);
 
     // Check if a gamepad is already connected (e.g. page refreshed while connected)
-    const existing = navigator.getGamepads ? navigator.getGamepads() : [];
-    for (const gp of existing) {
-      if (gp) { setGamepadConnected(true); setGamepadName(gp.id); break; }
-    }
+    checkExisting();
 
     return () => {
       window.removeEventListener('gamepadconnected', onConnect);
       window.removeEventListener('gamepaddisconnected', onDisconnect);
+      window.removeEventListener('focus', checkExisting);
     };
   }, []);
 
