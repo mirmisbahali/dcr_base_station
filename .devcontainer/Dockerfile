@@ -68,3 +68,6 @@ RUN sudo apt-get update && sudo apt-get install -y \
 # RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
 ENV PIP_BREAK_SYSTEM_PACKAGES=1
+
+RUN sudo python3 -m pip install minimalmodbus --index-url https://pypi.org/simple --break-system-packages
+RUN sudo python3 -m pip install ikpy --index-url https://pypi.org/simple --break-system-packages
